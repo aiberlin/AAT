@@ -200,12 +200,21 @@ byte midi_clock_counter = 0;
 byte midi_clockdivider = 6;
 int msPerBeat = 0; // calc how many ms is one beat
 int seqStep = 0;
-int prevSeqStep = 1;
 int barCount = 0;
 int fillSeed = 0;
 int delayTime = 0; // for the swing offset
 elapsedMillis snare_env_ms;
 int randSeedPool[1024];
+
+// == Global Roller vars ==
+// one global dataset for a mono roller; set by the play funcs, and executed by the main loop()
+int rollCount = 0; // count up until subBeat
+int rollDict[] = {4, 1, 80, 5, 4}; // one glob dict with {countDown, voice, vel, crescendo, numRollz};
+const unsigned int subBeat = 12; // quantization step below the 1/16th. Cld be 60.... will be calc.' in µs.
+const byte numSubdivisions = 5; // how many nTuples we can choose from.
+byte rollChoices[numSubdivisions] =  {2, 3, 4, 6, 12}; // which subdivs are possible for rolls?
+//byte rollGaps[numSubdivisions] =  {6, 4, 3, 2, 1};
+
 
 
 void setup() {
@@ -251,7 +260,9 @@ void loop() {
     digitalWrite(ledPin, 1);
 
     //    randomSeed( analogRead(1) );
-    randomSeed( randSeedPool[barCount % 1024] );
+    if (_free.outVal == 0) {
+      randomSeed( randSeedPool[barCount % 1024] );
+    }
     // _thresh.outVal = float(random(1, 99)) / 100.0;
     // every 8 bars
     if ( barCount % 8 == random(6, 8)) {
@@ -259,7 +270,9 @@ void loop() {
     } else {
       fillSeed = 0;
     };
-    randomSeed( _varSeed.outVal + fillSeed );
+    if (_free.outVal == 0) {
+      randomSeed( _varSeed.outVal + fillSeed );
+    }
   }
 
   //    if (snare_env_ms > 60) {
@@ -282,7 +295,6 @@ void loop() {
       swinger.trigger(delayTime * 1000); // trigger the callback func playMyNote
 
       snare_env_ms = 0; // use for midi noteOFF ?
-      prevSeqStep = seqStep;
     }
 
     seqStep++;

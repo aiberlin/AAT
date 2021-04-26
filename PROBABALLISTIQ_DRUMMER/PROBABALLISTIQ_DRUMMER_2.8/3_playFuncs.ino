@@ -1,79 +1,8 @@
+// note playing and roll funcs
+// @@@@@@@@@@@@@@@@@@@@ funcs @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+// @@@@@@@@@@@@@@@@@@@@ funcs @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-
-
-
-void playStep()
-{
-  for (byte voice = 0; voice < rows; voice++) {
-    float val = steps[voice][seqStep % columns]; // modulo, in case more than 16 steps
-    float thr = (1 - _thresh.outVal);
-    float randThr = float(random(-1000, 1000)) / 1000.0 * _probDev.outVal;
-    boolean gate = val >= (thr + randThr);
-
-    // rollin'
-    float rollVal = steps[voice][((seqStep + 1) % int(_numSteps.outVal)) % columns];
-    boolean rollProb = random(100) < _rollProb.outVal;
-    boolean rollGate = rollVal >= (thr + randThr) && rollProb;
-    /*
-        Serial.println(
-          "rollVal: " +   String(rollVal) +
-          "\t rollProb: " + String(rollProb) +
-          "\t rollGate: " + String(rollGate) +
-          "\t voice: " + String(voice)
-          //      "val: " +   String(val) +
-          //      "\t probDev: " + String(_probDev.outVal) +
-          //      "\t thr: " + String(thr) +
-          //      "\t randThr: " + String(randThr) +
-          //      "\t gate: " + String(gate)
-        );
-    */
-    if (rollGate) {
-      playRoll(voice);
-    }
-
-    if (gate) {
-      byte velo = random(80, 127);
-      playMyNote(voice, velo);
-    }
-  }
-}
-
-
-void playRoll(byte voice) {
-  // seend according to what?
-  int numRollz = random(2, 7);
-  int rollzTimeDiv = msPerBeat / numRollz;
-  byte velo = random(80, 100); // starting vel
-  byte crescendo = random(0, 10) - 5;
-
-  Serial.println(
-    "rolling! num: " + String(numRollz) +
-    "\tTimeDiv: " + String(rollzTimeDiv) +
-    "\t voice: " + String(voice) +
-    "\t velo: " + String(velo)
-  );
-
-  roller.restart();
-  //  for (byte cnt = 0; cnt < numRollz; cnt++) {
-  for (numRollz; numRollz > 0; numRollz--) {
-    if (roller.hasPassed(rollzTimeDiv)) {
-
-      Serial.println(
-        "*** cnt: " + String(numRollz) +
-        "\t voice: " + String(voice) +
-        "\t velo: " + String(velo)
-      );
-
-      playMyNote(voice, velo);
-      roller.restart();
-    }
-    velo = velo + crescendo;
-  }
-  roller.stop();
-}
-
-
-
+// just play a note on Audio & MIDI by voice=noteNum and velo
 void playMyNote(byte voice, byte velo) {
   switch (voice) {
     case 0:
@@ -103,6 +32,89 @@ void playMyNote(byte voice, byte velo) {
       break;
   }
 }
+
+
+
+// just indexing into pattern and doing the random weight things.
+void playStep() {
+  for (byte voice = 0; voice < rows; voice++) {
+    float val = steps[voice][seqStep % columns]; // modulo, in case more than 16 steps
+    float thr = (1 - _thresh.outVal);
+    float randThr = float(random(-1000, 1000)) / 1000.0 * _probDev.outVal;
+    boolean gate = val >= (thr + randThr);
+
+    // rollin'
+    float rollVal = steps[voice][((seqStep + 1) % int(_numSteps.outVal)) % columns];
+    boolean rollProb = random(100) < _rollProb.outVal;
+    boolean rollGate = rollVal >= (thr + randThr) && rollProb;
+    /*
+        Serial.println(
+          "rollVal: " +   String(rollVal) +
+          "\t rollProb: " + String(rollProb) +
+          "\t rollGate: " + String(rollGate) +
+          "\t voice: " + String(voice)
+          //      "val: " +   String(val) +
+          //      "\t probDev: " + String(_probDev.outVal) +
+          //      "\t thr: " + String(thr) +
+          //      "\t randThr: " + String(randThr) +
+          //      "\t gate: " + String(gate)
+        );
+    */
+    if (rollGate) {
+      scheduleRoll(voice);
+    }
+
+    if (gate) {
+      byte velo = random(80, 127);
+      playMyNote(voice, velo);
+    }
+  }
+}
+
+
+
+void scheduleRoll(byte voice) {
+  // seend according to what?
+  byte numRollz = rollChoices[random(numSubdivisions)];
+  //  int rollzTimeDiv = msPerBeat / numRollz; // cld add a multiplier to go over 1/16 or 2/26 ...
+  byte velo = random(80, 100); // starting vel
+  byte crescendo = random(0, 10) - 5;
+
+  rollDict[0] = numRollz;
+  rollDict[1] = voice;
+  rollDict[2] = velo;
+  rollDict[3] = crescendo;
+  rollDict[4] = numRollz; // keep in memory
+
+  Serial.println(
+    "rolling! num: " + String(numRollz) +
+    //    "\tTimeDiv: " + String(rollzTimeDiv) +
+    "\t voice: " + String(voice) +
+    "\t velo: " + String(velo)
+  );
+}
+
+// called all the time in Main loop() via Chrono::roller
+void rollFunc() {
+  if (rollDict[0] > 0) {
+    // work thru the list
+    if ( rollCount % rollDict[4] == 0) { // checks gaps in the subdivisions
+      // rollDict = {numRollz, voice, velo, crescendo, numRollz};
+      playMyNote(rollDict[1], rollDict[2]);  // play
+      rollDict[2] = constrain(rollDict[2] + rollDict[3], 10, 127); // iterate vel/cresc
+      rollDict[0]--; // decrement
+
+      Serial.println(
+        "*** cnt: " + String(rollDict[0]) +
+        "\t voice: " + String(rollDict[1]) +
+        "\t velo: " + String(rollDict[2])
+      );
+    }
+
+  }
+}
+
+
 
 // @@@@@@@@@@@@@@@@@@@@ e.o. funcs @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 // @@@@@@@@@@@@@@@@@@@@ e.o. funcs @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
