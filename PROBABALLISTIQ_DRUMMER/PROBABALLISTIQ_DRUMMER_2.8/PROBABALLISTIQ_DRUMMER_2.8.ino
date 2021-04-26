@@ -20,7 +20,7 @@
 
   var 2.8:
   - split in several .ino's
-  - not yet implemented: roll: call func recursively, pass decrementing cnt arg: TeensyTimerTool https://github.com/luni64/TeensyTimerTool/wiki/Callbacks "It gets more interesting when you need to pass context to a callback function"
+  - not yet implemented: roll.
 
   var 3:
 
@@ -91,34 +91,40 @@ struct midi_type {
   String ctlName ;
   byte ccnum;
   float range[2];
-  float outVal;
+  float outVal;    // == default
   float oldOutVal;
-  byte inVal;
-  byte oldInVal;
+  float inVal;      // 0..1 norm'd
+  float oldInVal;   // 0..1 norm'd, unused
   float curve;
-  float stepSize; // emulating SC ControlSpecs
+  float stepSize;  // emulating SC ControlSpecs & for Encoder
+  byte encoderIndex;
 };
 
-/// direct pots:
-struct midi_type _thresh = { "thresh", 10, {0, 1}, random(50) / 100.0, 0, 0, 0, 0, 1.0 / 127 };
-struct midi_type _probDev = { "probDev", 11, {0, 2}, random(50) / 100.0, 0, 0, 0,  0, 1.0 / 127 };
-// on encoder
-// no Button / default
-struct midi_type _varSeed = { "varSeed", 12, {1, 64}, 74, 0, 0, 0, 0, 1 };
-// buttons 1..7
-struct midi_type _rollProb = {"rollProb", 15, {0, 100}, 5, 0, 0, 0, -3, 1};
-struct midi_type _amp = { "amp", 7, {0, 1}, 0.3, 0, 0, 0,  -2,  1.0 / 127};
-struct midi_type _numSteps = { "numSteps", 9, {1, 24}, 12, 0, 0, 0,  0, 1 };
-struct midi_type _BPM = { "BPM", 8, {60, 187}, 95, 0, 0, 0,   0, 1 };
-struct midi_type _swing = { "swing", 14, {0, 0.95}, 0.1, 0, 0, 0, -4, 0.05 };
-struct midi_type _skipTo = {"skipTo", 16, {0, 127}, 63, 0, 0, 0, 0, 1};
-struct midi_type _seqPlay = { "seqPlay", 13, {0, 1}, 1, 0, 0, 0, 0, 1 };
+/*
+   nktl2:
+   \sl: 0..7\
+   \kn: 16..23
+*/
+//// direct pots; compatible to encoder pots...
+struct midi_type _thresh  =  { "THRS",  0, {0, 1}, random(50) / 100.0, 0, 0, 0, 0, 1.0 / 127, 5 };
+struct midi_type _probDev  = { "DEV ",  1, {0, 2}, random(50) / 100.0, 0, 0, 0,  0, 1.0 / 127, 6 };
+//// on encoder
+// no Button / default: enc.addr 0
+struct midi_type _varSeed =  { "SEED",  16, {1, 1000}, 74, 0, 0, 0, 0, 1,          0 };
+// 8 Encoders 1..8
+struct midi_type _rollProb = { "ROLL",  2,  {0, 100}, 5, 0, 0, 0, -3, 2,          1 };
+struct midi_type _amp =      { "VOL ",  3,  {0, 111}, 33, 0, 0, 0,  -2, 1.0 / 111,  2 };
+struct midi_type _numSteps = { "STEP",  4,  {1, 24}, 12, 0, 0, 0,  0, 1,          4 };
+struct midi_type _BPM =      { "BPM ",  5,  {30, 222}, 95, 0, 0, 0,   0, 1,       8 };
+struct midi_type _swing =    { "SWNG",  6,  {0, 95}, 10, 0, 0, 0, -4, 5,         16 };
+struct midi_type _skipTo =   { "SKIP",  7,  {0, 2}, 1, 0, 0, 0, 0, 1,            32 };
+struct midi_type _seqPlay =  { "PLAY",  18, {0, 1}, 1, 0, 0, 0, 0, 1,             64 };
+struct midi_type _free =     { "FREE",  17, {0, 2}, 1, 0, 0, 0, 0, 1,            128 }; // opposite of freeze. freewheelin' rand seed
 
-const byte numCCs = 10; // can read this from size of ccnumMap
-// simple map for cc-> indices; needs hand knit reverse lookup func _indexOf
-//byte ccnumMap[numCCs] = {7, 8, 9, 10, 11, 12, 13, 14};
+const byte numCCs = 11; // still needed for now, as I can't get sizeOf of these structs...
 // list 'em in an array of pointers
-midi_type* midimap[] = { &_amp, &_BPM, &_numSteps, &_thresh, &_probDev, &_varSeed, &_seqPlay, &_swing, &_rollProb, &_skipTo };
+midi_type* midimap[] = { &_amp, &_BPM, &_numSteps, &_thresh, &_probDev, &_varSeed, &_seqPlay, &_swing, &_rollProb, &_skipTo, &_free };
+
 
 #include "TeensyTimerTool.h"
 using namespace TeensyTimerTool;
@@ -211,7 +217,7 @@ void setup() {
 
   AudioMemory(20);
   audioShield.enable();
-  audioShield.volume(_amp.outVal);
+  audioShield.volume(_amp.outVal/100.);
 
   // reduce the gain on mixer channels, so more than 1
   // sound can play simultaneously without clipping
@@ -266,7 +272,7 @@ void loop() {
     // Play Pattern
     if (seqPlay) {
       if (seqStep % 2 == 1) {
-        delayTime = (msPerBeat * _swing.outVal) + 1;
+        delayTime = (msPerBeat * _swing.outVal * 0.01) + 1;
       } else {
         delayTime = 1;
         digitalWrite(ledPin, !digitalRead(ledPin));

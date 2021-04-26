@@ -15,7 +15,7 @@ void getControlChangeMsg(byte channel, byte control, byte value) {
       // midimap[idx]->outVal = map(value, 0, 127, midimap[idx]->range[0], midimap[idx]->range[1]);
 
       // MIDI map setters - do all to avoid comparing prev states..... actually, do look up prev states...
-      audioShield.volume( _amp.outVal );
+      audioShield.volume( _amp.outVal/ 100. );
       //  metro.interval(convertBPMtoMS(_BPM.outVal * 4));
       convertBPMtoMS(_BPM.outVal * 4); // globalized
       seqPlay = boolean(_seqPlay.outVal);
