@@ -5,10 +5,10 @@
 // @@@@@@@@@@@@@@@@@@@@ funcs @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 // http://www.sengpielaudio.com/calculator-bpmtempotime.htm
-float convertBPMtoMS(int bpm) {
-  float ms = (float) 60000 / bpm;
-  msPerBeat = ms; // globalize
-  return ms;
+int convertBPMtoMS(int bpm) {
+  msPerBeat = 60000 / bpm; // globalize
+  usPerSubBeat = msPerBeat * 1000 / subBeat; // µs!
+  return msPerBeat;
 }
 float midicps(float notenum) {
   return 440.0 * (pow (2, ((notenum - 69.0) / 12.0)));

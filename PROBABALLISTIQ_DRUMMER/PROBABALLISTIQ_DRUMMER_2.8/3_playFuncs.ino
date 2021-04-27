@@ -107,7 +107,9 @@ void rollFunc() {
       Serial.println(
         "*** cnt: " + String(rollDict[0]) +
         "\t voice: " + String(rollDict[1]) +
-        "\t velo: " + String(rollDict[2])
+        "\t velo: " + String(rollDict[2]) 
+        +         "\t rollCount: " + String(rollCount)
+
       );
     }
 

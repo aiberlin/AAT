@@ -198,9 +198,10 @@ float steps[rows][columns] = {
 };
 byte midi_clock_counter = 0;
 byte midi_clockdivider = 6;
-int msPerBeat = 0; // calc how many ms is one beat
+unsigned int msPerBeat = 0; // calc how many ms is one 1/16
+unsigned long usPerSubBeat = 0; // calc how many ms is 1/16/24
+unsigned long barCount = 0;
 int seqStep = 0;
-int barCount = 0;
 int fillSeed = 0;
 int delayTime = 0; // for the swing offset
 elapsedMillis snare_env_ms;
@@ -210,7 +211,7 @@ int randSeedPool[1024];
 // one global dataset for a mono roller; set by the play funcs, and executed by the main loop()
 int rollCount = 0; // count up until subBeat
 int rollDict[] = {4, 1, 80, 5, 4}; // one glob dict with {countDown, voice, vel, crescendo, numRollz};
-const unsigned int subBeat = 12; // quantization step below the 1/16th. Cld be 60.... will be calc.' in µs.
+const unsigned int subBeat = 12; // quantization step below the 1/16th. Cld be 60.... calc.' in µs.
 const byte numSubdivisions = 5; // how many nTuples we can choose from.
 byte rollChoices[numSubdivisions] =  {2, 3, 4, 6, 12}; // which subdivs are possible for rolls?
 //byte rollGaps[numSubdivisions] =  {6, 4, 3, 2, 1};
@@ -226,7 +227,7 @@ void setup() {
 
   AudioMemory(20);
   audioShield.enable();
-  audioShield.volume(_amp.outVal/100.);
+  audioShield.volume(_amp.outVal / 100.);
 
   // reduce the gain on mixer channels, so more than 1
   // sound can play simultaneously without clipping
@@ -246,7 +247,7 @@ void setup() {
   usbMIDI.setHandleControlChange(getControlChangeMsg);
   usbMIDI.setHandleRealTimeSystem(RealTimeSystem);
   Serial.begin(115200);
-  Serial.println("PROBABALLISTIQ DRUMMER 1 \nHH 2021 hannes@earweego.net\nwelcome! \n\n");
+  Serial.println("AI\nPROBABALLISTIQ DRUMMER 1 \nHH 2021 hannes@airborneinstruments.eu\nwelcome! \n\n");
 }
 
 void loop() {
@@ -263,7 +264,7 @@ void loop() {
     if (_free.outVal == 0) {
       randomSeed( randSeedPool[barCount % 1024] );
     }
-    // _thresh.outVal = float(random(1, 99)) / 100.0;
+    //     _thresh.outVal = float(random(1, 99)) / 100.0; // automatic threshold varying
     // every 8 bars
     if ( barCount % 8 == random(6, 8)) {
       fillSeed = random(100);
@@ -275,9 +276,17 @@ void loop() {
     }
   }
 
-  //    if (snare_env_ms > 60) {
-  //      envelope1.noteOff();
-  //    }
+  //    if (snare_env_ms > 60) {    envelope1.noteOff();    }
+
+  // roller in da main time loop.
+  if (roller.hasPassed(usPerSubBeat), true) {
+    rollFunc();
+    //    rollCount++;
+    rollCount = (rollCount + 1) % (16 * subBeat);
+    //    Serial.println("\t rollCount: " + String(rollCount));
+
+  }
+
 
   if (metro.hasPassed(msPerBeat)) {
     metro.restart();
