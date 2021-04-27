@@ -74,9 +74,10 @@
 */
 
 // tweak vars - make analog ctls and MIDI :) //////////////////////////////////////////////
-//float amp = 0.8;   // main vol || range 0..1
-int BPM = 95;       // set to ridiculously low (1) when using MIDI clock  || range 60..187 == MIDI ints
-bool seqPlay = true;  // play / pause   || range 0..1
+const float softTakeOverTolerance = 127.0 / 5.0; // 5 MIDI steps
+const int displayTimeOut = 3000; // 3 secs for diplay timer to hold the selected >0 val
+const int analoxTimeOut = 20; // 50Hz
+const int buttonsTimeOut = 10; // 100Hz // faster because it's cheaper and debounces for 1 cycle.
 
 // MIDI note nums for MIDI riggers. Change them if u prefer them differently ordered, e.g. 60..63
 const byte notenums[] = {42, 39, 40, 36}; // GM MIDI // ﻿ hat,  clap,  snare, kick;
@@ -129,6 +130,7 @@ midi_type* midimap[] = { &_amp, &_BPM, &_numSteps, &_thresh, &_probDev, &_varSee
 #include "TeensyTimerTool.h"
 using namespace TeensyTimerTool;
 //#include <Metro.h>   // https://www.pjrc.com/teensy/td_libs_Metro.html
+//#include <Ticker.h>  // cld be fun
 // INCLUDE CHRONO LIBRARY : http://github.com/SofaPirate/Chrono
 #include <Chrono.h>
 #include <Bounce.h>
@@ -182,9 +184,10 @@ AudioControlSGTL5000     audioShield;    //xy=1205.5665893554688,312
 
 OneShotTimer swinger; // generate a timer from the pool (Pool: 2xGPT, 16xTMR(QUAD), 20xTCK)
 //Timer metro; // generate a timer from the pool (Pool: 2xGPT, 16xTMR(QUAD), 20xTCK)
-//Metro metro = Metro(300);
 Chrono metro;
 Chrono roller;
+Chrono displayTimer;
+Chrono analoxTimer;
 
 const byte ledPin = 13;
 const byte rows = 4; // 4 'tracks'; rows in the seq matrix
@@ -196,6 +199,7 @@ float steps[rows][columns] = {
   {0.1, 0, 0.5, 0, 0.9, 0.6, 0.2, 0, 0, 0.3, 0.6, 0.2, 0.9, 0.1, 0.2, 0.1},
   {1.0, 0., 0., 0.7, 0., 0., 0.5, 0., 0.9, 0, 0.3, 0, 0, 0.4, 0.3, 0.2}
 };
+int BPM = 95;       // set to ridiculously low (1) when using MIDI clock  || range 60..187 == MIDI ints
 byte midi_clock_counter = 0;
 byte midi_clockdivider = 6;
 unsigned int msPerBeat = 0; // calc how many ms is one 1/16
@@ -218,12 +222,58 @@ byte rollChoices[numSubdivisions] =  {2, 3, 4, 6, 12}; // which subdivs are poss
 
 
 
+//// global HW I/F vars
+#include <Bounce.h>
+#include <Encoder.h>
+/*
+#include <TM1638plus.h>
+//#include <TM1638plus_common.h>
+//#include <TM1638plus_Model2.h>
+
+#define  STROBE_TM 4 // strobe = GPIO connected to strobe line of module
+#define  CLOCK_TM 6  // clock = GPIO connected to clock line of module
+#define  DIO_TM 7 // data = GPIO connected to data line of module
+//default false,, If using a high freq CPU > ~100 MHZ set to true.
+//Constructor object (GPIO STB , GPIO CLOCK , GPIO DIO, use high freq MCU)
+TM1638plus tm(STROBE_TM, CLOCK_TM , DIO_TM, true);
+*/
+
+// https://tttapa.github.io/Control-Surface-doc/Doxygen/d1/d08/1_8FilteredAnalog-Advanced_8ino-example.html
+#include <Arduino_Helpers.h>
+#include <AH/Hardware/FilteredAnalog.hpp>
+FilteredAnalog<> threshPot = A0;
+FilteredAnalog<> devPot = A1;
+
+Encoder encoda(5, 6);
+
+// button row
+uint8_t buttByte = 0;
+uint8_t checkButtByte = 0;
+uint8_t oldButtByte = 0;
+uint8_t cachedButton = 0; // the one we're using for Encoder and Display
+uint8_t globalButtIdx = 0; // address into array of param structs
+// LED row:
+uint8_t leds1 = 1;
+uint8_t leds2 = 2;
+uint8_t ledsPWM = 16;
+// displayString
+String displayString = "AIRBORNE"; //"PROBABLE"; // hmm..
+char displayStringBuf[9] = "AIRBORNE";
+
+
+
+
+
 void setup() {
   // init a big pool with rand nrs.
   randomSeed(1974);
   for (int i = 0; i < 1024; i++) {
     randSeedPool[i] = random(2147483647); // this shd be the long's range..
   }
+
+//  tm.displayBegin(); // init TM display
+//  tm.brightness(0x08);
+//  tm.displayText(displayStringBuf); // welcome
 
   AudioMemory(20);
   audioShield.enable();
@@ -236,12 +286,10 @@ void setup() {
   mix1.gain(2, 0.5);  // snr
   mix1.gain(3, 0.75);  // kiq
 
-  mix2.gain(1, 0.25);
-  mix3.gain(1, 0.25);
+  mix2.gain(1, 0.25); // rev?
+  mix3.gain(1, 0.25); // rev?
 
   swinger.begin(playStep);
-  //    metro.beginPeriodic(callback, convertBPMtoMS(BPM * 4)); // 250ms // TeensyTimer
-  //  metro.interval(convertBPMtoMS(BPM * 4)); // step time = 4 * BPM time
   convertBPMtoMS(BPM * 4); // Chrono time is global
 
   usbMIDI.setHandleControlChange(getControlChangeMsg);
@@ -278,6 +326,21 @@ void loop() {
 
   //    if (snare_env_ms > 60) {    envelope1.noteOff();    }
 
+  // read analox 50-100 times a sec
+  if (analoxTimer.hasPassed(analoxTimeOut), true) {
+//        readAnalox(); // off for debug
+  }
+  readEncoda(); // always...
+/*
+  // releases to button state 0 3 secs after every action on Buttons or Encoder; don't restart
+  if (displayTimer.hasPassed(displayTimeOut), false) {
+    // switch it to button address 0 and trigger updateDisplay
+    cachedButton = 0;
+    globalButtIdx = _encIndexOfStruct(cachedButton); // easier if globalized
+    writeDisplayString(); // what to display here? Will be SEED...
+  }
+*/
+
   // roller in da main time loop.
   if (roller.hasPassed(usPerSubBeat), true) {
     rollFunc();
@@ -292,20 +355,18 @@ void loop() {
     metro.restart();
 
     // Play Pattern
-    if (seqPlay) {
+    if (_seqPlay.outVal) {
       if (seqStep % 2 == 1) {
         delayTime = (msPerBeat * _swing.outVal * 0.01) + 1;
       } else {
         delayTime = 1;
         digitalWrite(ledPin, !digitalRead(ledPin));
       }
-
       //      Serial.println(seqStep);
       swinger.trigger(delayTime * 1000); // trigger the callback func playMyNote
 
       snare_env_ms = 0; // use for midi noteOFF ?
     }
-
     seqStep++;
   }
 

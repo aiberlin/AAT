@@ -38,6 +38,21 @@ int _indexOfStruct(byte ccnum) {
   }
   return wantedIndex;
 }
+
+
+// return index in struct array based upon encoderIndex input.
+int _encIndexOfStruct(byte addr) {
+  int wantedIndex = -1;
+  for (int i = 0; i < numCCs; i++) {
+    if (midimap[i]->encoderIndex == addr) {
+      wantedIndex = i;
+      break;
+    }
+  }
+  return wantedIndex;
+}
+
+
 /*
    RealTimeSystem – process MIDI real time messages (MIDI system clock)
    Midiclock events are sent at a rate of 24 pulses per quarter note
