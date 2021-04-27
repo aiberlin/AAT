@@ -10,15 +10,14 @@
 - 1 Encoder
 
 - Jack out, 
-- Power Supply: ?? 
+- Power Supply - Options:
 	- USB yes!
 	- guit style 9V inv
 	- 2 x AA Batt
 	- LiPo Cell
 
 
-
----------====
+------------
 
 
 ### Pinout:
@@ -51,7 +50,7 @@ This device is 5V if using 3.3V MCU, level shift.
 https://github.com/gavinlyonsrepo/TM1638plus
 
 
-#### Analo:
+#### Analog:
 	3 digi pins for Encoder
 	2 Analog pins for Pots / or 1 Joystick
 
@@ -72,7 +71,7 @@ https://github.com/gavinlyonsrepo/TM1638plus
   - SKIP
   - PLAY
 
-  midi_type* midimap[] = { &_amp, &_BPM, &_numSteps, &_thresh, &_probDev, &_varSeed, &_seqPlay, &_swing, &_rollProb, &_skipTo };
+  	midi_type* midimap[] = { &_amp, &_BPM, &_numSteps, &_thresh, &_probDev, &_varSeed, &_seqPlay, &_swing, &_rollProb, &_skipTo };
 
 
 
