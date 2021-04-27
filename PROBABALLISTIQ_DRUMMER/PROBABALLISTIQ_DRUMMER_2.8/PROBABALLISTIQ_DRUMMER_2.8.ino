@@ -133,7 +133,6 @@ using namespace TeensyTimerTool;
 //#include <Ticker.h>  // cld be fun
 // INCLUDE CHRONO LIBRARY : http://github.com/SofaPirate/Chrono
 #include <Chrono.h>
-#include <Bounce.h>
 /*
   #include <algorithm> // wow, advanced C++ lib!
   #include <vector>
@@ -225,18 +224,18 @@ byte rollChoices[numSubdivisions] =  {2, 3, 4, 6, 12}; // which subdivs are poss
 //// global HW I/F vars
 #include <Bounce.h>
 #include <Encoder.h>
-/*
+
 #include <TM1638plus.h>
 //#include <TM1638plus_common.h>
 //#include <TM1638plus_Model2.h>
 
-#define  STROBE_TM 4 // strobe = GPIO connected to strobe line of module
+#define  STROBE_TM 2 // strobe = GPIO connected to strobe line of module
 #define  CLOCK_TM 6  // clock = GPIO connected to clock line of module
-#define  DIO_TM 7 // data = GPIO connected to data line of module
+#define  DIO_TM 9 // data = GPIO connected to data line of module
 //default false,, If using a high freq CPU > ~100 MHZ set to true.
-//Constructor object (GPIO STB , GPIO CLOCK , GPIO DIO, use high freq MCU)
+//Constructor object (GPIO STB , GPIO CLOCK , GPIO DIO, BOOLhigh freq MCU)
 TM1638plus tm(STROBE_TM, CLOCK_TM , DIO_TM, true);
-*/
+
 
 // https://tttapa.github.io/Control-Surface-doc/Doxygen/d1/d08/1_8FilteredAnalog-Advanced_8ino-example.html
 #include <Arduino_Helpers.h>
@@ -244,7 +243,10 @@ TM1638plus tm(STROBE_TM, CLOCK_TM , DIO_TM, true);
 FilteredAnalog<> threshPot = A0;
 FilteredAnalog<> devPot = A1;
 
-Encoder encoda(5, 6);
+Encoder encoda(3, 4);
+const byte encodaSwitchPin = 5;
+boolean encodaSwitchState = 0;
+Bounce encodaSwitch = Bounce(encodaSwitchPin, 10);  // 10 ms debounce
 
 // button row
 uint8_t buttByte = 0;
@@ -271,9 +273,11 @@ void setup() {
     randSeedPool[i] = random(2147483647); // this shd be the long's range..
   }
 
-//  tm.displayBegin(); // init TM display
-//  tm.brightness(0x08);
-//  tm.displayText(displayStringBuf); // welcome
+  tm.displayBegin(); // init TM display
+  tm.brightness(0x08);
+  tm.displayText(displayStringBuf); // welcome
+
+  pinMode(encodaSwitchPin, INPUT_PULLUP);
 
   AudioMemory(20);
   audioShield.enable();
@@ -328,10 +332,12 @@ void loop() {
 
   // read analox 50-100 times a sec
   if (analoxTimer.hasPassed(analoxTimeOut), true) {
-//        readAnalox(); // off for debug
+    //        readAnalox(); // off for debug
   }
   readEncoda(); // always...
-/*
+  encodaSwitch.update ( );
+  encodaSwitchState = encodaSwitch.read(); // globalize
+
   // releases to button state 0 3 secs after every action on Buttons or Encoder; don't restart
   if (displayTimer.hasPassed(displayTimeOut), false) {
     // switch it to button address 0 and trigger updateDisplay
@@ -339,7 +345,7 @@ void loop() {
     globalButtIdx = _encIndexOfStruct(cachedButton); // easier if globalized
     writeDisplayString(); // what to display here? Will be SEED...
   }
-*/
+
 
   // roller in da main time loop.
   if (roller.hasPassed(usPerSubBeat), true) {

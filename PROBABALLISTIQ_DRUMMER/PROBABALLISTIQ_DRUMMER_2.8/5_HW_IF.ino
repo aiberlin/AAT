@@ -45,7 +45,7 @@
 // @@@@@@@@@@@@@@@@@@@@ funcs @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 // @@@@@@@@@@@@@@@@@@@@ funcs @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-/*
+
 // push String onto Display. triggered by Buttons and Encoders, later MIDI in
 void writeDisplayString() {
   char valuesLower[5];
@@ -98,7 +98,7 @@ void readButts() {
   }
   checkButtByte = buttByte; // always copy
 }
-*/
+
 
 
 void readAnalox() {
