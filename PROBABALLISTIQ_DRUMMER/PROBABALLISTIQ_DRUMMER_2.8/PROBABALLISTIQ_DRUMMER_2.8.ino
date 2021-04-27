@@ -86,6 +86,33 @@ byte ccnumMap[] = {7, 8, 9, 10, 11, 12, 13, 14};
 
 // end tweak vars ////////////////////////////////////////////////////////////////////////
 
+
+// Pin Map TMdisplay, Pots, Encoder //////////////////////////////////////////////////////
+
+// - pins GLOBAL for all - //
+#define STROBE_TM 2 // strobe = GPIO connected to strobe line of module
+#define CLOCK_TM 6  // clock = GPIO connected to clock line of module
+#define ENC_DEC 3
+#define ENC_INC 4
+#define ENC_SW 5
+#define POT_THRESH A1
+#define POT_DEV A2
+
+#define useTeensy4 true 
+#if useTeensy4
+// - pins Teensy 4 - //
+#define  DIO_TM 9 // data = GPIO connected to data line of module
+#define  LOFI 12  // for loFi audio output - requires a different Audio Ugen than T3.2
+#else
+// - pins Teensy 3.2 - //
+#define  DIO_TM 8    // data = GPIO connected to data line of module
+#define  LOFI A14    // for loFi audio output - requires a different Audio Ugen than T4
+#endif
+// e.o. Pin Map TMdisplay, Pots, Encoder //////////////////////////////////////////////////////
+
+
+
+
 // MIDI implementation as struct, so cc receiver is simple:
 // struct https://arduino.stackexchange.com/questions/72044/declaring-and-using-array-of-structures-in-arduino
 struct midi_type {
@@ -229,9 +256,6 @@ byte rollChoices[numSubdivisions] =  {2, 3, 4, 6, 12}; // which subdivs are poss
 //#include <TM1638plus_common.h>
 //#include <TM1638plus_Model2.h>
 
-#define  STROBE_TM 2 // strobe = GPIO connected to strobe line of module
-#define  CLOCK_TM 6  // clock = GPIO connected to clock line of module
-#define  DIO_TM 9 // data = GPIO connected to data line of module
 //default false,, If using a high freq CPU > ~100 MHZ set to true.
 //Constructor object (GPIO STB , GPIO CLOCK , GPIO DIO, BOOLhigh freq MCU)
 TM1638plus tm(STROBE_TM, CLOCK_TM , DIO_TM, true);
@@ -240,13 +264,12 @@ TM1638plus tm(STROBE_TM, CLOCK_TM , DIO_TM, true);
 // https://tttapa.github.io/Control-Surface-doc/Doxygen/d1/d08/1_8FilteredAnalog-Advanced_8ino-example.html
 #include <Arduino_Helpers.h>
 #include <AH/Hardware/FilteredAnalog.hpp>
-FilteredAnalog<> threshPot = A0;
-FilteredAnalog<> devPot = A1;
+FilteredAnalog<> threshPot = POT_THRESH;
+FilteredAnalog<> devPot = POT_DEV;
 
-Encoder encoda(3, 4);
-const byte encodaSwitchPin = 5;
+Encoder encoda(ENC_DEC, ENC_INC);
 boolean encodaSwitchState = 0;
-Bounce encodaSwitch = Bounce(encodaSwitchPin, 10);  // 10 ms debounce
+Bounce encodaSwitch = Bounce(ENC_SW, 10);  // 10 ms debounce
 
 // button row
 uint8_t buttByte = 0;
@@ -277,7 +300,7 @@ void setup() {
   tm.brightness(0x08);
   tm.displayText(displayStringBuf); // welcome
 
-  pinMode(encodaSwitchPin, INPUT_PULLUP);
+  pinMode(ENC_SW, INPUT_PULLUP);
 
   AudioMemory(20);
   audioShield.enable();
