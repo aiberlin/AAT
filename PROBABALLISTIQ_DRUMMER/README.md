@@ -20,8 +20,8 @@ All made in Teensyduino; Audio with the Teensy Audio design tool.
 - core: internal probaballistiq pattern generator
 - internal, sample based 4 track audio seq: {kick, snr, clap, hats}. 
 - USB MIDI note out
-- USB MIDI cc in for all params
-- ToDo later
+- USB MIDI cc in for all params - currently mapped to KORG Nanokontrol2, easily repatched to other CCnums. 
+- ToDo later: 
 	- test USB MIDI host for nanoKontrol etc faderboxes.
 	- MIDI clock sync in/out 
 	- DIN MIDI I/O
@@ -36,10 +36,9 @@ All made in Teensyduino; Audio with the Teensy Audio design tool.
 
 ##### HW I/F
 
-- include <Bounce.h>
-- include <Encoder.h>
-- https://github.com/tttapa/Control-Surface // for analogin filtering
-- // don't ! include MIDIController // https://github.com/joshnishikawa/MIDIcontroller
+- include <Bounce.h>  // Teensy common Library
+- include <Encoder.h> // Teensy common Library
+- https://github.com/tttapa/Control-Surface // for analog input filtering
 - https://github.com/gavinlyonsrepo/TM1638plus // LED/Button I/F
 	- We use "Model 1" as defined in TM1638plus.h. The library support ASCII, text, Hex and allows for setting individual segments, and the decimal point of segment. The TM1638plus_TEST.ino contains a set of tests demonstrating library functions. For more information see the commented headers in header file.
 	- User may have to debounce buttons depending on application. > Teensy Bounce Class
