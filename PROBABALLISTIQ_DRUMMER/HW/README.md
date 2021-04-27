@@ -1,12 +1,7 @@
 # Probaballistiq_Drummer - HW
 
-
-=============
-
-## HW 
-
 ### components:
-- Teensy 4.0 for devel, [Teensy 3.2. f productuion]
+- Teensy 4.0 or 3.2
 - Teensy Audio shield
 - Teensy 4 MQA as in <https://github.com/TeensyUser/doc/wiki/Audio-Example-I2S-without-AudioShield>
 - TM1638 Model 1 Input/Display device
@@ -23,7 +18,7 @@
 
 
 
-=============
+---------====
 
 
 ### Pinout:
@@ -56,33 +51,34 @@ This device is 5V if using 3.3V MCU, level shift.
 https://github.com/gavinlyonsrepo/TM1638plus
 
 
-#### Analox:
+#### Analo:
 	3 digi pins for Encoder
-	2 Analog pins for Pots
+	2 Analog pins for Pots / or 1 Joystick
 
 
-=========
+---------
 
 = totalling to **15 GPIO** pins
 
-=========
+---------
 
 ### encoder:  names
-  -- SEED (default)
-  -- ROLL
-  -- VOL
-  -- STEP
-  -- BPM
-  -- SWNG
-  -- SKIP
-  -- PLAY
+  - SEED (default)
+  - ROLL
+  - VOL
+  - STEP
+  - BPM
+  - SWNG
+  - SKIP
+  - PLAY
 
   midi_type* midimap[] = { &_amp, &_BPM, &_numSteps, &_thresh, &_probDev, &_varSeed, &_seqPlay, &_swing, &_rollProb, &_skipTo };
 
 
 
-===================
-## varia: 
+-----------------
+## unrelated varia: 
 
 https://synthcube.com/cart/index.php?route=product/product&path=99_68&product_id=465
+
 https://www.pjrc.com/breakout-board-for-teensy-4-0/

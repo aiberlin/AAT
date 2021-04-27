@@ -52,4 +52,4 @@ All made in Teensyduino; Audio with the Teensy Audio design tool.
 
 
 ##### Audio
-- // Audio libs automatically included by Teensy Audio Design tool
+- Audio libs are automatically included by the Teensy Audio Design tool
