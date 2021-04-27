@@ -128,11 +128,9 @@ struct midi_type {
   byte encoderIndex;
 };
 
-/*
-   nktl2:
-   \sl: 0..7\
-   \kn: 16..23
-*/
+
+// MIDI MAppings according to KORG Nktl2:   \sl: 0..7;  \kn: 16..23
+
 //// direct pots; compatible to encoder pots...
 struct midi_type _thresh  =  { "THRS",  0, {0, 1}, random(50) / 100.0, 0, 0, 0, 0, 1.0 / 127, 5 };
 struct midi_type _probDev  = { "DEV ",  1, {0, 2}, random(50) / 100.0, 0, 0, 0,  0, 1.0 / 127, 6 };

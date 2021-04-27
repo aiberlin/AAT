@@ -39,9 +39,8 @@ int _indexOfStruct(byte ccnum) {
   return wantedIndex;
 }
 
-
 // return index in struct array based upon encoderIndex input.
-int _encIndexOfStruct(byte addr) {
+int _encIndexOfStructDumm(byte addr) {
   int wantedIndex = -1;
   for (int i = 0; i < numCCs; i++) {
     if (midimap[i]->encoderIndex == addr) {
@@ -49,6 +48,23 @@ int _encIndexOfStruct(byte addr) {
       break;
     }
   }
+  return wantedIndex;
+}
+
+
+// return index in struct array based upon encoderIndex input.
+// https://en.cppreference.com/w/cpp/language/range-for
+int _encIndexOfStruct(byte addr) {
+  int wantedIndex = -1;
+  int i = 0;
+  //  for (int i = 0; i < numCCs; i++) {
+  for (auto element : midimap) // access by value, the type of i is int
+    if (element->encoderIndex == addr) {
+      wantedIndex = i;
+      break;
+    }
+  i++;
+
   return wantedIndex;
 }
 
@@ -127,7 +143,7 @@ float fscale( float originalMin, float originalMax, float newBegin, float newEnd
     rangedValue =  newBegin - (pow(normalizedCurVal, curve) * NewRange);
   }
   return rangedValue;
-} 
+}
 
 
 void skipTo_(byte step_) {
