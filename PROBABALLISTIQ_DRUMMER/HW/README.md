@@ -3,19 +3,21 @@
 ### components:
 - Teensy 4.0 or 3.2
 - Teensy Audio shield
-- Teensy 4 MQA as in <https://github.com/TeensyUser/doc/wiki/Audio-Example-I2S-without-AudioShield>
+- alternative without shield: 
+	- Teensy 4: MQA as in <https://github.com/TeensyUser/doc/wiki/Audio-Example-I2S-without-AudioShield>
+	- Teensy 3.2: DAC 12bit out on pin A14
 - TM1638 Model 1 Input/Display device
-- 3.3 <> 5 V Level shifter for display
-- 2 pots
+- 3.3 <> 5 V Level shifter for display, min 3 chans
+- 2 pots /  1 joystick
 - 1 Encoder
-
-- Jack out, 
+- Audio out:
+	- Stereo Jack 
+	- optional: 5V PAM amp chip and loudspeaker
 - Power Supply - Options:
-	- USB yes!
+	- Teensuy USB yes!
 	- guit style 9V inv
 	- 2 x AA Batt
 	- LiPo Cell
-
 
 ------------
 
@@ -32,7 +34,6 @@
 
 	Audio Control T3/T4: 
 	18, 19; shareable with SDA, SCL (other I2C chips)
-
 
 
 #### TM1638
@@ -61,7 +62,8 @@ https://github.com/gavinlyonsrepo/TM1638plus
 
 ---------
 
-### encoder:  names
+### parameter names list
+````
   - SEED (default)
   - ROLL
   - VOL
@@ -71,9 +73,9 @@ https://github.com/gavinlyonsrepo/TM1638plus
   - SKIP
   - PLAY
 
-  	midi_type* midimap[] = { &_amp, &_BPM, &_numSteps, &_thresh, &_probDev, &_varSeed, &_seqPlay, &_swing, &_rollProb, &_skipTo };
+  midi_type* midimap[] = { &_amp, &_BPM, &_numSteps, &_thresh, &_probDev, &_varSeed, &_seqPlay, &_swing, &_rollProb, &_skipTo };
 
-
+````
 
 -----------------
 ## unrelated varia: 
