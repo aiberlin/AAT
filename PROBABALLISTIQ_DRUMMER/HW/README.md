@@ -24,6 +24,11 @@
 
 ### Pinout:
 
+<!-- ![Teensy40 Wiring](teensy40_wiring.png) -->
+<!-- ![Teensy3.2 Wiring](teensy3.2_wiring.png) -->
+<img src="teensy40_wiring.png" alt="teensy40 Wiring" width="350"/>
+<img src="teensy3.2_wiring.png" alt="Teensy3.2 Wiring" width="350"/>
+
 #### Audio shield
 
 	Audio Data T4: 
