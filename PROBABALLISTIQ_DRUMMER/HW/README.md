@@ -10,20 +10,10 @@
 - 3.3 <> 5 V Level shifter for display, >= 3 chans
 - 2 pots OR 1 joystick
 - 1 Encoder
-- Audio out Jack 
-- Power Supply vie Teensy USB. 
-Alt. options:
-	- guit style 9V barrel jack, center neg.
-=======
-
-- 3.3 <> 5 V Level shifter for display, min 3 chans
-- 2 pots /  1 joystick
-- 1 Encoder
 - Audio out:
-
 	- Stereo Jack 
 	- optional: 5V PAM amp chip and loudspeaker
-- Power Supply: Teensuy USB
+- Power Supply: Teensy USB
   alt. Options:
 
 	- guit style 9V barrel jack; center neg.
@@ -69,6 +59,7 @@ https://github.com/gavinlyonsrepo/TM1638plus
 
 = totalling to **18 GPIO** pins
 
+![pinout pdf](Pinout.pdf)
 
 **Pinout table Teensy 3.2:**
 
@@ -124,7 +115,6 @@ Pin Nr. | Func.
 21		| Audio Shield
 23		| Audio Shield
 
-![pinout pdf](Pinout.pdf)
 
 ---------
 
