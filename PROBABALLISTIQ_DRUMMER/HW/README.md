@@ -60,7 +60,8 @@ https://github.com/gavinlyonsrepo/TM1638plus
 = totalling to **18 GPIO** pins
 
 ![pinout pdf](Pinout.pdf)
-
+    <iframe src="Pinout.pdf" width="100%" height="500px">
+	
 **Pinout table Teensy 3.2:**
 
 Pin Nr. | Func. 
