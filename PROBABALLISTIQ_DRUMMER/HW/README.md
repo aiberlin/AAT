@@ -61,7 +61,7 @@ https://github.com/gavinlyonsrepo/TM1638plus
 
 ![pinout pdf](Pinout.pdf)
 <br>
-<iframe src="/Pinout.pdf" width="100%" height="500px">
+<iframe src="/Pinout.pdf" width="50%></iframe>
 	
 **Pinout table Teensy 3.2:**
 
